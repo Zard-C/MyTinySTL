@@ -741,30 +741,29 @@ void list<T>::splice(const_iterator pos, list& x, const_iterator it)
 template <typename T> 
 void list<T>:: splice(const_iterator pos, list& x, const_iterator first, const_iterator last) 
 {
-    if(first != last && this != &x) 
+    if(first != last ) 
     {
-        size_type n = mystl::distance(first, last); 
-        THROW_LENGTH_ERROR_IF(_size > max_size() - n, "list<T>'s size too big"); 
-        auto f = first._node; 
-        auto l = last._node->prev; 
+        if(this != &x) 
+        {
+            size_type n = mystl::distance(first, last); 
+            THROW_LENGTH_ERROR_IF(_size > max_size() - n, "list<T>'s size too big"); 
+            auto f = first._node; 
+            auto l = last._node->prev; 
 
-        x.unlink_nodes(f, l); 
-        link_nodes(pos._node, f, l); 
+            x.unlink_nodes(f, l); 
+            link_nodes(pos._node, f, l); 
 
-        _size +=n; 
-        x._size -=n; 
-    }
-    
-    else if(first != last && this == &x)
-    {
-        
-        auto f = first._node;
-        auto l = last._node->prev; 
-        // 把 end 也给卸了
-        unlink_nodes(f, l); 
-        link_nodes(pos._node, f, l);    
-    }
-   
+            _size +=n; 
+            x._size -=n; 
+        }
+        else
+        {
+            auto f = first._node;
+            auto l = last._node->prev; 
+            unlink_nodes(f, l); 
+            link_nodes(pos._node, f, l); 
+        }
+    }   
 }
 
 // remove_if: 删除满足条件的元素
