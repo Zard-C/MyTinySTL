@@ -1,3 +1,4 @@
+// --listtest.cpp 测试样例from http://www.cplusplus.com/
 #include "list.h"
 #include <gtest/gtest.h>
 #include <list> 
