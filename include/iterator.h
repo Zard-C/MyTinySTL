@@ -240,7 +240,7 @@ public:
 
 
     typedef Iterator                                                iterator_type; 
-    typedef reverse_iterator<Iterator>const                         self; 
+    typedef reverse_iterator<Iterator>                              self; 
 
 public:  
     // ctor

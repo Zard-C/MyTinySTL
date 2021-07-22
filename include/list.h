@@ -19,6 +19,8 @@
 #include "util.h"
 #include "exceptdef.h"
 
+#include <iostream> 
+
 
 namespace mystl 
 {
@@ -101,7 +103,7 @@ struct list_iterator :public mystl::iterator<mystl::bidirectional_iterator_tag, 
     typedef T&                                      reference; 
     typedef typename node_triats<T>::base_ptr       base_ptr;
     typedef typename node_triats<T>::node_ptr       node_ptr; 
-    typedef list_iterator<T>const                   self; 
+    typedef list_iterator<T>                        self; 
 
     base_ptr        _node;  // 指向当前节点
 
@@ -124,7 +126,7 @@ struct list_iterator :public mystl::iterator<mystl::bidirectional_iterator_tag, 
     }
 
     // 前置++ 
-    self& operator++(int)
+    self operator++(int)
     {   
         MYSTL_DEBUG(nullptr != _node); 
         self temp = *this; 
@@ -141,7 +143,7 @@ struct list_iterator :public mystl::iterator<mystl::bidirectional_iterator_tag, 
     }
 
     // 后置-- 
-    self& operator--(int)
+    self operator--(int)
     {
         MYSTL_DEBUG(nullptr != _node); 
         self temp = *this; 
@@ -242,7 +244,8 @@ public:
     typedef typename node_triats<T>::base_ptr           base_ptr; 
     typedef typename node_triats<T>::node_ptr           node_ptr; 
 
-    allocator_type  get_allocator() {return node_allocator(); }
+    // should be return data_allocator(); 
+    allocator_type  get_allocator() {return data_allocator(); }
 
 private:   
     base_ptr    _node;      // 指向末尾节点 
@@ -269,7 +272,7 @@ public:
 
     // range 
     template <typename Iter, 
-        typename std::enable_if<mystl::is_input_iterator<T>::value,int>::type = 0>
+        typename std::enable_if<mystl::is_input_iterator<Iter>::value,int>::type = 0>
     list(Iter first, Iter last)
     {
         copy_init(first, last); 
@@ -296,7 +299,7 @@ public:
     // copy assign 
     list& operator= (const list& rhs)
     {
-        if(this !=rhs )  
+        if(this != &rhs )  
         {
             assign(rhs.begin(), rhs.end()); 
         }
@@ -349,11 +352,11 @@ public:
     reverse_iterator   rbegin()         noexcept 
     {return reverse_iterator(end()); }
     const_reverse_iterator rbegin()     const noexcept 
-    {return reverse_iterator(end()); }
+    {return const_reverse_iterator(end()); }
     reverse_iterator   rend()           noexcept 
     {return reverse_iterator(begin()); }
-    reverse_iterator   rend()           const noexcept 
-    {return reverse_iterator(begin()); }
+    const_reverse_iterator   rend()           const noexcept 
+    {return const_reverse_iterator(begin()); }
 
     // cbegin && cend 
     const_iterator      cbegin()        const noexcept
@@ -479,7 +482,7 @@ public:
 
     // range insert 
     template <typename Iter, 
-    typename std::enable_if<mystl::is_input_iterator<Iter>::value, int> = 0> 
+    typename std::enable_if<mystl::is_input_iterator<Iter>::value, int>::type = 0> 
     iterator insert(const_iterator pos, Iter first, Iter last)
     {
         size_type n = mystl::distance(first, last); 
@@ -520,7 +523,7 @@ public:
         MYSTL_DEBUG(!empty()); 
         auto n = _node->next; 
         unlink_nodes(n, n); 
-        destroy_nodes(n->as_node()); 
+        destroy_node(n->as_node()); 
         --_size; 
     }
 
@@ -625,15 +628,16 @@ private:
     iterator list_sort(iterator first, iterator last, size_type n, Compare comp); 
 };  // end of class list<T> 
 
-// erase pos 
+// erase pos bug: what if erase first element? 
 template <typename T> 
 typename list<T>::iterator 
 list<T>::erase(const_iterator pos) 
 {
-    MYSTL_DEBUG(pos != end()); 
+    MYSTL_DEBUG(pos != cend()); 
     auto n = pos._node; 
     auto next = n->next; 
     unlink_nodes(n, n); 
+    
     destroy_node(n->as_node()); 
     --_size; 
     return iterator(next); 
@@ -733,7 +737,7 @@ void list<T>::splice(const_iterator pos, list& x, const_iterator it)
     --x._size; 
 }
 
-// splice: list x 的[first, last) 节点接在pos之前
+// splice: 将list x 的[first, last) 节点接在pos之前
 template <typename T> 
 void list<T>:: splice(const_iterator pos, list& x, const_iterator first, const_iterator last) 
 {
@@ -742,15 +746,25 @@ void list<T>:: splice(const_iterator pos, list& x, const_iterator first, const_i
         size_type n = mystl::distance(first, last); 
         THROW_LENGTH_ERROR_IF(_size > max_size() - n, "list<T>'s size too big"); 
         auto f = first._node; 
-        auto l = last._node; 
+        auto l = last._node->prev; 
 
-        x.unlink(f, l); 
-        link_nodes(pos.node, f, l); 
+        x.unlink_nodes(f, l); 
+        link_nodes(pos._node, f, l); 
 
         _size +=n; 
         x._size -=n; 
     }
-
+    
+    else if(first != last && this == &x)
+    {
+        
+        auto f = first._node;
+        auto l = last._node->prev; 
+        // 把 end 也给卸了
+        unlink_nodes(f, l); 
+        link_nodes(pos._node, f, l);    
+    }
+   
 }
 
 // remove_if: 删除满足条件的元素
@@ -843,9 +857,12 @@ void list<T>::reverse()
 {
     if(_size < 1) return; 
 
+    // pivot -> 1 -> 2 -> pivot
+    // pivot <- 1 <- 2 <- pivot
     auto first = begin();
     auto last = end(); 
-    for(; first._node != last._node; first._node = first._node->next) 
+    // 交换后1 通过prev指向 2;
+    for(; first._node != last._node; first._node = first._node->prev) 
     {
         mystl::swap(first._node->prev, first._node->next);
     }
@@ -1033,7 +1050,7 @@ void list<T>::copy_assign(Iter f2, Iter l2)
 
     if(f2 == l2) 
     {
-        erase(f1, l2); 
+        erase(f1, l1); 
     }
     else  
     {
@@ -1184,7 +1201,7 @@ list<T>:: list_sort(iterator f1, iterator l2, size_type n, Compare cmp)
 
     while(f1 != l1 && f2 != l2)
     {
-        if(comp(*f2, *f1))
+        if(cmp(*f2, *f1))
         {
             auto m = f2; 
             ++m; 
@@ -1199,7 +1216,7 @@ list<T>:: list_sort(iterator f1, iterator l2, size_type n, Compare cmp)
                 l1 = m; 
             }
             f2 = m; 
-            unlink_nodes(f, 1); 
+            unlink_nodes(f, l); 
             m = f1; 
             ++m;
             link_nodes(f1._node, f, l); 
@@ -1231,7 +1248,7 @@ bool operator==(const list<T>& lhs, const list<T>& rhs)
 template <typename T> 
 bool operator< (const list<T>& lhs, const list<T>& rhs)
 {
-    return std::lexicographical_compare(lhs.cbegin(), lhs.cend(), rhs.cbefore_begin(), rhs.cend());
+    return std::lexicographical_compare(lhs.cbegin(), lhs.cend(), rhs.cbegin(), rhs.cend());
 }
 
 template <typename T> 
