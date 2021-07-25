@@ -1192,6 +1192,176 @@ void deque<T>::copy_insert(iterator pos, ForwardIter first, ForwardIter last, si
     }
 }
 
+// insert_dispatch 
+template <typename T>  
+template <typename Iter>  
+void deque<T>::  
+insert_dispatch(iterator pos, Iter first, Iter last, input_iterator_tag)
+{
+    if(last <= first ) return; 
+    const size_type n = mystl::distance(first, last); 
+    const size_type elems_before = pos - _begin; 
+
+    if(elems_before < size() / 2) 
+    {
+        require_capacity(n, true); 
+    }
+    else   
+    {
+        require_capacity(n, false); 
+    }
+    pos = _begin + elems_before; 
+
+    auto cur = --last; 
+    for(size_type i = 0; i < n; ++i, --cur)
+    {
+        insert(pos, *cur); 
+    }
+}
+
+template <typename T>  
+template <typename Iter>  
+void deque<T>::  
+insert_dispatch(iterator pos, Iter first, Iter last, forward_iterator_tag) 
+{
+    if(last <= first) return; 
+    const size_type n = mystl::distance(first, last);  
+    if(pos.cur == _begin.cur) 
+    {
+        require_capacity(n, true); 
+        auto new_begin = _begin - n; 
+        try
+        {
+            std::uninitialized_copy(first, last, new_begin); 
+            _begin = new_begin;  
+        }
+        catch(...)
+        {
+            if(new_begin.node != _begin.node) 
+                destroy_buffer(new_begin.node, _begin.node - 1);
+            throw;  
+        }
+    }
+    else if(pos.cur == _end.cur)   
+    {
+        require_capacity(n, false); 
+        auto new_end = _end + n; 
+        try
+        {
+            std::uninitialized_copy(first, last, _end); 
+            _end = new_end; 
+        }
+        catch(...)
+        {
+            if(new_end.node != _end.node) 
+                destroy_buffer(_end.node + 1, new_end.node); 
+            throw; 
+        }
+    }
+    else  
+    {
+        copy_insert(pos, first, last, n); 
+    }
+}
+
+// require_capacity 
+template <typename T>
+void deque<T>:: require_capacity (size_type n, bool isFront)  
+{
+    if(isFront && (static_cast<size_type>(_begin.cur - _begin.first) < n)) 
+    {
+        const size_type need_buffer = (n - (_begin.cur - _begin.first)) / buffer_size + 1; 
+        if(need_buffer > static_cast<size_type>(_begin.node - _map)) 
+        {
+            reallocate_map_at_front(need_buffer); 
+            return; 
+        }
+        create_buffer(_begin.node - need_buffer, _begin.node - 1); 
+    }
+    else if(!isFront && (static_cast<size_type>(_end.last - _end.cur - 1) < n))
+    {
+        const size_type need_buffer = (n - (_end.last - _end.cur - 1)) / buffer_size + 1; 
+        if(need_buffer > static_cast<size_type>((_map + _map_size) - _end.node - 1))
+        {
+            reallocate_map_at_back(need_buffer); 
+            return; 
+        }
+        create_buffer(_end.node + 1, _end.node + need_buffer); 
+    }
+}
+
+// reallocate_map_at_front 
+template<typename T>  
+void deque<T>::reallocate_map_at_back(size_type need_buffer) 
+{
+    const size_type new_map_size = 
+        std::max(_map_size *2, _map_size + need_buffer + DEQUE_MAP_INIT_SIZE); 
+    map_pointer new_map = create_map(new_map_size); 
+    const size_type old_buffer = _end.node - _begin.node + 1; 
+    const size_type new_buffer = old_buffer + need_buffer; 
+
+    // 新的map中指针指向原来buffer，并创建新的buffer 
+    auto begin = new_map + ((new_map_size - new_buffer)/2); 
+    auto mid = begin + old_buffer; 
+    auto end = mid + need_buffer; 
+    for(auto begin1 = begin, begin2 = _begin.node; begin1 != mid; ++begin1, ++begin2) 
+    {
+        *begin1 = *begin2;  
+    }
+    create_buffer(mid, end - 1); 
+
+    // update data  
+    map_allocator::deallocate(_map, _map_size); 
+    _map = new_map; 
+    _map_size = new_map_size; 
+    _begin = iterator(*begin +(_begin.cur - _begin.first), begin); 
+    _end = iterator(*(mid - 1) + (_end.cur - _end.first), mid - 1); 
+}
+
+// overloading relational operators  
+template <typename T> 
+bool operator== (const deque<T>& lhs, const deque<T>& rhs)
+{
+    return lhs.size() == rhs.size() &&  
+        std::equal(lhs.begin(), lhs.end(), rhs.begin()); 
+}
+
+template <typename T>  
+bool operator< (const deque<T>& lhs, const deque<T>& rhs) 
+{
+    return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.end()); 
+}
+
+template<typename T>  
+bool operator!=(const deque<T>& lhs, const deque<T>& rhs) 
+{
+    return !(lhs == rhs); 
+}
+
+template<typename T>  
+bool operator>(const deque<T>& lhs, const deque<T>& rhs) 
+{
+    return rhs < lhs; 
+}
+
+template <typename T> 
+bool operator<=(const deque<T>& lhs, const deque<T>&rhs)
+{
+    return !(rhs < lhs); 
+}
+
+template <typename T>  
+bool operator>=(const deque<T>& lhs, const deque<T>& rhs) 
+{
+    return !(lhs < rhs); 
+}
+
+// overloading generic swap  
+template <typename T> 
+void swap(deque<T>& lhs, deque<T>& rhs) 
+{
+    lhs.swap(rhs); 
+}
 
 } // end of mystl 
 #endif // !_DEQUE_H_
