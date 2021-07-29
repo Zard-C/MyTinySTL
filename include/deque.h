@@ -18,6 +18,7 @@
 #include "memory.h"
 #include "util.h" 
 #include "exceptdef.h" 
+#include <memory> 
 
     // buffer0: [first, last) 
     //             curr                  
@@ -61,7 +62,7 @@ struct deque_iterator: public iterator<random_access_iterator_tag, T>
     value_pointer   cur;            // 所在缓冲区当前元素
     value_pointer   first;          // 所在缓冲区起始位置
     value_pointer   last;           // 所在缓冲区结束位置
-    value_pointer   node;           // 缓冲区所在节点
+    map_pointer     node;           // 缓冲区所在节点
 
     // ctor 
     deque_iterator() noexcept 
@@ -96,6 +97,14 @@ struct deque_iterator: public iterator<random_access_iterator_tag, T>
         return *this; 
     }
 
+    void set_node(map_pointer new_node)
+    {
+        node = new_node; 
+        first = *new_node;
+        last = first + buffer_size; 
+    }
+
+
     reference operator*() const{return *cur; }
     pointer   operator->() const {return cur; }
 
@@ -113,7 +122,7 @@ struct deque_iterator: public iterator<random_access_iterator_tag, T>
         if(cur == last) 
         {
             set_node(node + 1); 
-            cur - first; 
+            cur = first; 
         }
         return *this; 
     }
@@ -282,7 +291,7 @@ public:
             clear(); 
             // 这里怎么释放的? 
             data_allocator::deallocate(*_begin.node, buffer_size);
-            _begin->node = nullptr; 
+            *_begin.node = nullptr; 
             map_allocator::deallocate(_map, _map_size); 
             _map = nullptr; 
         }
@@ -514,7 +523,7 @@ void deque<T>::shrink_to_fit() noexcept
         data_allocator::deallocate(*cur, buffer_size); 
  
     }
-    for(auto cur = _end.node - 1; cur < _map + _map_size; ++cur) 
+    for(auto cur = _end.node + 1; cur < _map + _map_size; ++cur) 
     {
         data_allocator::deallocate(*cur, buffer_size); 
     }
