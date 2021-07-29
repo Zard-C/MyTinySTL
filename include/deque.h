@@ -516,16 +516,53 @@ deque<T>& deque<T>::operator=(deque&& rhs )
 
 // resize container 
 template <typename T> 
+void deque<T>::resize(size_type new_size, const value_type& value)
+{
+    const auto len = size(); 
+    if(new_size < len)
+    {
+        erase(_begin + new_size, _end); 
+    }
+    else  
+    {
+        insert(_end, new_size - len, value); 
+    }
+}
+
+// shrink_to_fit 
+template <typename T> 
 void deque<T>::shrink_to_fit() noexcept 
 {
+    std::cout << "Inside shrink_to_fit: ";
+    std::cout << _map << ", " << _map_size << "\n"; 
+    std::cout << _begin.node <<", " << _end.node << "\n";
+
     // at least leave head buffer 
     for(auto cur = _map; cur < _begin.node; ++cur) 
     {
         data_allocator::deallocate(*cur, buffer_size); 
  
     }
-    // fixed bug, cur should start from _end.node, not _end.node + 1
-    for(auto cur = _end.node; cur < _map + _map_size; ++cur) 
+
+    if(_begin.node == _end.node)
+    {
+        for(auto cur = _end.node + 1; cur < _map + _map_size; ++cur)
+        {
+            data_allocator::deallocate(*cur, buffer_size);
+            *cur = nullptr; 
+        }
+    }
+    else  
+    {
+         for(auto cur = _end.node; cur < _map + _map_size; ++cur)
+        {
+            data_allocator::deallocate(*cur, buffer_size);
+            *cur = nullptr; 
+        }
+    }
+    return; 
+    // fixed bug 
+    for(auto cur = _end.node + 1; cur < _map + _map_size; ++cur) 
     {
         data_allocator::deallocate(*cur, buffer_size); 
         *cur = nullptr; 
@@ -626,7 +663,7 @@ void deque<T>::push_back(const value_type& value)
 {
     if(_end.cur != _end.last - 1)
     {
-        data_allocator::construct(_end.cur, value); 
+        data_allocator::construct(_end.cur, value);  // Invalid write of size 4
         ++_end.cur; 
     }
     else 
