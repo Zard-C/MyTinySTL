@@ -313,11 +313,11 @@ public:
     reverse_iterator    rbegin()    noexcept 
     {return reverse_iterator(end()); } 
     const_reverse_iterator  rbegin()    const noexcept 
-    {return reverse_iterator(end); }     
+    {return const_reverse_iterator(end()); }     
     reverse_iterator    rend()      noexcept 
     {return reverse_iterator(begin()); } 
     const_reverse_iterator rend() const noexcept 
-    {return reverse_iterator(begin()); } 
+    {return const_reverse_iterator(begin()); } 
 
     const_iterator      cbegin()    const noexcept 
     {return begin(); } 

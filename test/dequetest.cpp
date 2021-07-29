@@ -73,3 +73,96 @@ TEST(test3, assign)
     }
     std::cout << "\n"; 
 }
+
+TEST(test4, at)
+{
+    mystl::deque<unsigned> mydeque (10);   // 10 zero-initialized unsigneds
+
+  // assign some values:
+  for (unsigned i=0; i<mydeque.size(); i++)
+    mydeque.at(i)=i;
+
+  std::cout << "mydeque contains:";
+  for (unsigned i=0; i<mydeque.size(); i++)
+    std::cout << ' ' << mydeque.at(i);
+
+  std::cout << '\n';
+}
+
+TEST(test5, back)
+{
+    mystl::deque<int> mydeque;
+
+  mydeque.push_back(10);
+
+  while (mydeque.back() != 0)
+    mydeque.push_back ( mydeque.back() -1 );
+
+  std::cout << "mydeque contains:";
+
+  for (mystl::deque<int>::iterator it = mydeque.begin(); it!=mydeque.end(); ++it)
+    std::cout << ' ' << *it;
+
+  std::cout << '\n';
+}
+
+TEST(test6, begin)
+{
+    mystl::deque<int> mydeque;
+
+    for (int i=1; i<=5; i++) mydeque.push_back(i);
+
+    std::cout << "mydeque contains:";
+
+    mystl::deque<int>::iterator it = mydeque.begin();
+
+    while (it != mydeque.end())
+    std::cout << ' ' << *it++;
+
+    std::cout << '\n';
+}
+
+TEST(test7, cbegin_cend)
+{
+    mystl::deque<int> mydeque = {10,20,30,40,50};
+
+    std::cout << "mydeque contains:";
+
+    for (auto it = mydeque.cbegin(); it != mydeque.cend(); ++it)
+    std::cout << ' ' << *it;
+
+    std::cout << '\n';
+}
+
+TEST(test8, clear)
+{
+    unsigned int i;
+    mystl::deque<int> mydeque;
+    mydeque.push_back (100);
+    mydeque.push_back (200);
+    mydeque.push_back (300);
+
+    std::cout << "mydeque contains:";
+    for (mystl::deque<int>::iterator it = mydeque.begin(); it!=mydeque.end(); ++it)
+    std::cout << ' ' << *it;
+    std::cout << '\n';
+
+    mydeque.clear();
+    mydeque.push_back (1101);
+    mydeque.push_back (2202);
+
+    std::cout << "mydeque contains:";
+    for (mystl::deque<int>::iterator it = mydeque.begin(); it!=mydeque.end(); ++it)
+    std::cout << ' ' << *it;
+    std::cout << '\n';
+}
+
+TEST(test9, crbegin_crend)
+{
+    mystl::deque<int> mydeque = {1,2,3,4,5};
+
+    std::cout << "mydeque backwards:";
+    for (auto rit = mydeque.crbegin(); rit != mydeque.crend(); ++rit)
+    std::cout << ' ' << *rit;
+    std::cout << '\n';
+}
