@@ -1428,7 +1428,7 @@ bool operator== (const deque<T>& lhs, const deque<T>& rhs)
 template <typename T>  
 bool operator< (const deque<T>& lhs, const deque<T>& rhs) 
 {
-    return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.end()); 
+    return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end()); 
 }
 
 template<typename T>  
