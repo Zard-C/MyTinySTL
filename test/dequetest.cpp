@@ -282,3 +282,80 @@ TEST(test15, erase)
         std::cout << ' ' << *it;
     std::cout << '\n';
 }
+
+TEST(test16, front)
+{
+    mystl::deque<int> mydeque;
+
+    mydeque.push_front(77);
+    mydeque.push_back(20);
+
+    mydeque.front() -= mydeque.back();
+
+    std::cout << "mydeque.front() is now " << mydeque.front() << '\n';
+}
+
+TEST(test17, get_allocator) 
+{
+    mystl::deque<int> mydeque;
+    int * p;
+    unsigned int i;
+
+    // allocate an array with space for 5 elements using deque's allocator:
+    p = mydeque.get_allocator().allocate(5);
+
+    // construct values in-place on the array:
+    for (i=0; i<5; i++) mydeque.get_allocator().construct(&p[i],i);
+
+    std::cout << "The allocated array contains:";
+    for (i=0; i<5; i++) std::cout << ' ' << p[i];
+    std::cout << '\n';
+
+    // destroy and deallocate:
+    for (i=0; i<5; i++) mydeque.get_allocator().destroy(&p[i]);
+    mydeque.get_allocator().deallocate(p,5);
+}
+
+TEST(test18, insert)
+{
+    mystl::deque<int> mydeque;
+
+    // set some initial values:
+    for (int i=1; i<6; i++) mydeque.push_back(i); // 1 2 3 4 5
+
+    mystl::deque<int>::iterator it = mydeque.begin();
+    ++it;
+
+    it = mydeque.insert (it,10);                  // 1 10 2 3 4 5
+    // "it" now points to the newly inserted 10
+
+    mydeque.insert (it,2,20);                     // 1 20 20 10 2 3 4 5
+    // "it" no longer valid!
+
+    it = mydeque.begin()+2;
+
+    std::vector<int> myvector (2,30);
+    mydeque.insert (it,myvector.begin(),myvector.end());
+                                                // 1 20 30 30 20 10 2 3 4 5
+
+    std::cout << "mydeque contains:";
+    for (it=mydeque.begin(); it!=mydeque.end(); ++it)
+    std::cout << ' ' << *it;
+    std::cout << '\n';
+
+}
+
+#if 1
+// memory-leaking 
+TEST(test19, operator_equal)
+{
+    mystl::deque<int> first (3);    // deque with 3 zero-initialized ints
+    mystl::deque<int> second (5);   // deque with 5 zero-initialized ints
+
+    second = first;                 // copy assign 
+    first = mystl::deque<int>();    // move assign 
+
+    std::cout << "Size of first: " << int (first.size()) << '\n';
+    std::cout << "Size of second: " << int (second.size()) << '\n';
+}
+#endif 

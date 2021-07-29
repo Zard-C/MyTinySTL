@@ -487,7 +487,7 @@ deque<T>& deque<T>:: operator=(const deque& rhs)
         const auto len = size(); 
         if(len >= rhs.size())
         {
-            erase(std::copy(rhs._begin, rhs._end, _begin). _end); 
+            erase(std::copy(rhs._begin, rhs._end, _begin), _end); 
         }
         else   
         {
@@ -505,6 +505,10 @@ template <typename T>
 deque<T>& deque<T>::operator=(deque&& rhs )
 {
     clear(); 
+    // 保留的buffer回收了吗？
+    data_allocator::deallocate(*_begin.node, buffer_size);
+    // _map 对应的T* 数组空间回收了吗? 
+    map_allocator::deallocate(_map, _map_size);
     _begin = mystl::move(rhs._begin); 
     _end  = mystl::move(rhs._end); 
     _map = rhs._map; 
