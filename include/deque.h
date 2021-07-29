@@ -619,7 +619,7 @@ template<typename T>
 template<typename ... Args>  
 typename deque<T>::iterator deque<T>::emplace(iterator pos, Args&&... args) 
 {
-    if(pos == _begin.cur)
+    if(pos.cur == _begin.cur)
     {
         emplace_front(mystl::forward<Args>(args)...); 
         return _begin; 
@@ -1079,7 +1079,7 @@ deque<T>::insert_aux(iterator pos, Args&& ... args)
         pos = _begin + elems_before; 
         auto pos1 = pos; 
         ++pos1; 
-        std::copy(front2, pos, front1); 
+        std::copy(front2, pos1, front1); 
     }
 
     else  
