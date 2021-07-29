@@ -797,6 +797,7 @@ deque<T>::erase(iterator pos)
         std::copy(next, _end, pos); 
         pop_back(); 
     }
+    return next;
 }
 
 // erase [first, last)  

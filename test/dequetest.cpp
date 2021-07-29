@@ -74,6 +74,7 @@ TEST(test3, assign)
     std::cout << "\n"; 
 }
 
+
 TEST(test4, at)
 {
     mystl::deque<unsigned> mydeque (10);   // 10 zero-initialized unsigneds
@@ -134,10 +135,13 @@ TEST(test7, cbegin_cend)
     std::cout << '\n';
 }
 
+
+// clear then push_back -> suppressed errors 
 TEST(test8, clear)
 {
     unsigned int i;
     mystl::deque<int> mydeque;
+    mydeque.clear();
     mydeque.push_back (100);
     mydeque.push_back (200);
     mydeque.push_back (300);
@@ -147,7 +151,7 @@ TEST(test8, clear)
     std::cout << ' ' << *it;
     std::cout << '\n';
 
-    mydeque.clear();
+    
     mydeque.push_back (1101);
     mydeque.push_back (2202);
 
@@ -164,5 +168,117 @@ TEST(test9, crbegin_crend)
     std::cout << "mydeque backwards:";
     for (auto rit = mydeque.crbegin(); rit != mydeque.crend(); ++rit)
     std::cout << ' ' << *rit;
+    std::cout << '\n';
+}
+
+TEST(test9, shrink_to_fit)
+{
+    mystl::deque<double> mydeque (100);
+    std::cout << "1. size of mydeque: " << mydeque.size() << '\n';
+
+    int a = 10; 
+    auto it = mydeque.end(); 
+    std::cout << it.cur<<" ,";
+    std::cout << it.last << "\n"; 
+    mydeque.shrink_to_fit();
+
+    
+
+    it = mydeque.end(); 
+    std::cout << it.cur<<"\n";
+    mydeque.push_back(10);
+
+    std::cout << mydeque.size() <<", " << mydeque.back() << '\n';
+}
+
+// emplace_back: segment fault 
+TEST(test10, emplace)
+{
+    mystl::deque<int> mydeque = {10,20,30};
+
+    auto it = mydeque.emplace ( mydeque.begin()+1, 100 );
+    mydeque.emplace ( it, 200 );
+    mydeque.emplace ( mydeque.end(), 300 );
+
+    std::cout << "mydeque contains:";
+    for (auto& x: mydeque)
+    std::cout << ' ' << x;
+    std::cout << '\n';
+}
+
+TEST(test11, emplace_back)
+{
+    mystl::deque<int> mydeque = {10,20,30};
+
+    mydeque.emplace_back (100);
+    mydeque.emplace_back (200);
+
+    std::cout << "mydeque contains:";
+    for (auto& x: mydeque)
+        std::cout << ' ' << x;
+    std::cout << '\n';
+}
+
+TEST(test12, emplace_front)
+{
+    mystl::deque<int> mydeque = {10,20,30};
+
+    mydeque.emplace_front (111);
+    mydeque.emplace_front (222);
+
+    std::cout << "mydeque contains:";
+    for (auto& x: mydeque)
+        std::cout << ' ' << x;
+    std::cout << '\n';
+}
+
+TEST(test13, empty)
+{
+    mystl::deque<int> mydeque;
+    int sum (0);
+
+    for (int i=1;i<=10;i++) mydeque.push_back(i);
+
+    while (!mydeque.empty())
+    {
+        sum += mydeque.front();
+        mydeque.pop_front();
+    }
+
+    std::cout << "total: " << sum << '\n';
+}
+
+TEST(test14, end)
+{
+    mystl::deque<int> mydeque;
+
+    for (int i=1; i<=5; i++) mydeque.insert(mydeque.end(),i);
+
+    std::cout << "mydeque contains:";
+
+    mystl::deque<int>::iterator it = mydeque.begin();
+
+    while (it != mydeque.end() )
+    std::cout << ' ' << *it++;
+
+    std::cout << '\n';
+}
+
+TEST(test15, erase)
+{
+    mystl::deque<int> mydeque;
+
+    // set some values (from 1 to 10)
+    for (int i=1; i<=10; i++) mydeque.push_back(i);
+
+    // erase the 6th element
+    mydeque.erase (mydeque.begin()+5);
+
+    // erase the first 3 elements:
+    mydeque.erase (mydeque.begin(),mydeque.begin()+3);
+
+    std::cout << "mydeque contains:";
+    for (mystl::deque<int>::iterator it = mydeque.begin(); it!=mydeque.end(); ++it)
+        std::cout << ' ' << *it;
     std::cout << '\n';
 }
