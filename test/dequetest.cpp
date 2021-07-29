@@ -171,25 +171,7 @@ TEST(test9, crbegin_crend)
     std::cout << '\n';
 }
 
-TEST(test9, shrink_to_fit)
-{
-    mystl::deque<double> mydeque (100);
-    std::cout << "1. size of mydeque: " << mydeque.size() << '\n';
 
-    int a = 10; 
-    auto it = mydeque.end(); 
-    std::cout << it.cur<<" ,";
-    std::cout << it.last << "\n"; 
-    mydeque.shrink_to_fit();
-
-    
-
-    it = mydeque.end(); 
-    std::cout << it.cur<<"\n";
-    mydeque.push_back(10);
-
-    std::cout << mydeque.size() <<", " << mydeque.back() << '\n';
-}
 
 // emplace_back: segment fault 
 TEST(test10, emplace)
@@ -345,7 +327,7 @@ TEST(test18, insert)
 
 }
 
-#if 1
+
 // memory-leaking 
 TEST(test19, operator_equal)
 {
@@ -358,4 +340,181 @@ TEST(test19, operator_equal)
     std::cout << "Size of first: " << int (first.size()) << '\n';
     std::cout << "Size of second: " << int (second.size()) << '\n';
 }
-#endif 
+
+TEST(test20, operator_access)
+{
+    mystl::deque<int> mydeque (10);   // 10 zero-initialized elements
+    mystl::deque<int>::size_type sz = mydeque.size();
+
+    // assign some values:
+    for (unsigned i=0; i<sz; i++) mydeque[i]=i;
+
+    // reverse order of elements using operator[]:
+    for (unsigned i=0; i<sz/2; i++)
+    {
+    int temp;
+    temp = mydeque[sz-1-i];
+    mydeque[sz-1-i]=mydeque[i];
+    mydeque[i]=temp;
+    }
+
+    // print content:
+    std::cout << "mydeque contains:";
+    for (unsigned i=0; i<sz; i++)
+    std::cout << ' ' << mydeque[i];
+    std::cout << '\n';
+}
+
+TEST(test21, pop_back)
+{
+    mystl::deque<int> mydeque;
+    int sum (0);
+    mydeque.push_back (10);
+    mydeque.push_back (20);
+    mydeque.push_back (30);
+
+    while (!mydeque.empty())
+    {
+        sum+=mydeque.back();
+        mydeque.pop_back();
+    }
+
+    std::cout << "The elements of mydeque add up to " << sum << '\n';
+}
+
+TEST(test22, pop_front) 
+{
+    mystl::deque<int> mydeque;
+
+  mydeque.push_back (100);
+  mydeque.push_back (200);
+  mydeque.push_back (300);
+
+  std::cout << "Popping out the elements in mydeque:";
+  while (!mydeque.empty())
+  {
+    std::cout << ' ' << mydeque.front();
+    mydeque.pop_front();
+  }
+
+  std::cout << "\nThe final size of mydeque is " << int(mydeque.size()) << '\n';
+}
+
+TEST(test23, push_back)
+{
+    mystl::deque<int> mydeque; 
+    for(int i = 0; i < 1024; ++i)  
+    {
+        mydeque.push_back(i); 
+    }
+    std::cout << "mydeque stores " << (int) mydeque.size() << " numbers.\n";
+}
+
+TEST(test24, rbegin_rend)
+{
+    mystl::deque<int> mydeque (5);  // 5 default-constructed ints
+
+    mystl::deque<int>::reverse_iterator rit = mydeque.rbegin();
+
+    int i=0;
+    for (rit = mydeque.rbegin(); rit!= mydeque.rend(); ++rit)
+    *rit = ++i;
+
+    std::cout << "mydeque contains:";
+    for (mystl::deque<int>::iterator it = mydeque.begin(); it != mydeque.end(); ++it)
+    std::cout << ' ' << *it;
+    std::cout << '\n';
+}
+
+TEST(test25, resize)
+{
+    mystl::deque<int> mydeque;
+    mystl::deque<int>::iterator it;
+
+    // set some initial content:
+    for (int i=1; i<10; ++i) mydeque.push_back(i);
+
+    mydeque.resize(5);
+    mydeque.resize(8,100);
+    mydeque.resize(12);
+
+    std::cout << "mydeque contains:";
+    for (mystl::deque<int>::iterator it = mydeque.begin(); it != mydeque.end(); ++it)
+        std::cout << ' ' << *it;
+    std::cout << '\n';
+
+}
+
+TEST(test26, shrink_to_fit)
+{
+    mystl::deque<double> mydeque (100);
+    std::cout << "1. size of mydeque: " << mydeque.size() << '\n';
+
+    int a = 10; 
+    auto it = mydeque.end(); 
+    std::cout << it.cur<<" ,";
+    std::cout << it.last << "\n"; 
+    mydeque.shrink_to_fit();
+
+    
+
+    it = mydeque.end(); 
+    std::cout << it.cur<<"\n";
+    mydeque.push_back(10);
+
+    std::cout << mydeque.size() <<", " << mydeque.back() << '\n';
+}
+
+TEST(test27, swap)
+{
+    unsigned int i;
+    mystl::deque<int> foo (3,100);   // three ints with a value of 100
+    mystl::deque<int> bar (5,200);   // five ints with a value of 200
+
+    foo.swap(bar);
+
+    std::cout << "foo contains:";
+    for (mystl::deque<int>::iterator it = foo.begin(); it!=foo.end(); ++it)
+    std::cout << ' ' << *it;
+    std::cout << '\n';
+
+    std::cout << "bar contains:";
+    for (mystl::deque<int>::iterator it = bar.begin(); it!=bar.end(); ++it)
+    std::cout << ' ' << *it;
+    std::cout << '\n';
+
+}
+
+TEST(test28, relational_opeartor)
+{
+    mystl::deque<int> foo (3,100);   // three ints with a value of 100
+  mystl::deque<int> bar (2,200);   // two ints with a value of 200
+
+  if (foo==bar) std::cout << "foo and bar are equal\n";
+  if (foo!=bar) std::cout << "foo and bar are not equal\n";
+  if (foo< bar) std::cout << "foo is less than bar\n";
+  if (foo> bar) std::cout << "foo is greater than bar\n";
+  if (foo<=bar) std::cout << "foo is less than or equal to bar\n";
+  if (foo>=bar) std::cout << "foo is greater than or equal to bar\n";
+
+}
+
+TEST(test29, generic_swap)
+{
+    unsigned int i;
+  mystl::deque<int> foo (3,100);   // three ints with a value of 100
+  mystl::deque<int> bar (5,200);   // five ints with a value of 200
+
+  swap(foo,bar);
+
+  std::cout << "foo contains:";
+  for (mystl::deque<int>::iterator it = foo.begin(); it!=foo.end(); ++it)
+    std::cout << ' ' << *it;
+  std::cout << '\n';
+
+  std::cout << "bar contains:";
+  for (mystl::deque<int>::iterator it = bar.begin(); it!=bar.end(); ++it)
+    std::cout << ' ' << *it;
+  std::cout << '\n';
+
+}
