@@ -13,7 +13,8 @@
 // * insert
 
 
-#include <initializer_list> 
+#include <initializer_list>
+#include <algorithm>
 #include "iterator.h"
 #include "memory.h"
 #include "util.h" 
@@ -243,7 +244,7 @@ private:
 public:  
     // ctor 
     deque() 
-    {fill_init(0, value_type()); }
+    { fill_init(0, value_type()); }
 
     explicit deque(size_type n)
     { fill_init(n, value_type()); }
@@ -289,7 +290,7 @@ public:
         if(_map != nullptr) 
         {
             clear(); 
-            // 这里怎么释放的? 
+            //clear 之后，只剩下一个buffer没有被释放
             data_allocator::deallocate(*_begin.node, buffer_size);
             *_begin.node = nullptr; 
             map_allocator::deallocate(_map, _map_size); 
@@ -523,9 +524,11 @@ void deque<T>::shrink_to_fit() noexcept
         data_allocator::deallocate(*cur, buffer_size); 
  
     }
-    for(auto cur = _end.node + 1; cur < _map + _map_size; ++cur) 
+    // fixed bug, cur should start from _end.node, not _end.node + 1
+    for(auto cur = _end.node; cur < _map + _map_size; ++cur) 
     {
         data_allocator::deallocate(*cur, buffer_size); 
+        *cur = nullptr; 
     }
 }
 
@@ -795,7 +798,7 @@ deque<T>::erase(iterator first, iterator last)
 template <typename T>  
 void deque<T>:: clear()  
 {
-    // clear keeps head buffer alive  
+    // clear keeps only head buffer objects(elements) alive  
     for(map_pointer cur = _begin.node + 1; cur < _end.node; ++cur)
     {
         data_allocator::destroy(*cur, *cur + buffer_size); 
@@ -865,6 +868,17 @@ void deque<T>::create_buffer(map_pointer nstart, map_pointer nfinish)
             *cur = nullptr; 
         }
         throw; 
+    }
+}
+
+//destroy_buffer 
+template <typename T> 
+void deque<T>::destroy_buffer(map_pointer nstart, map_pointer nfinish)
+{
+    for(map_pointer n= nstart; n <= nfinish; ++n)
+    {
+        data_allocator::deallocate(*n, buffer_size); 
+        *n = nullptr; 
     }
 }
 
@@ -1081,7 +1095,7 @@ void deque<T>::fill_insert(iterator pos, size_type n, const value_type& value)
         catch(...)
         {
             if(new_begin.node != _begin.node) 
-            { destroy_buffer(new_begin.node. _begin.node - 1); }
+            { destroy_buffer(new_begin.node, _begin.node - 1); }
             throw; 
         } 
     }
@@ -1100,7 +1114,7 @@ void deque<T>::fill_insert(iterator pos, size_type n, const value_type& value)
                 auto _end_n = _end - n; 
                 std::uninitialized_copy(_end_n, _end, _end); 
                 _end = new_end; 
-                std:copy_backward(pos, _end_n, old_end); 
+                std::copy_backward(pos, _end_n, old_end); 
                 std::fill(pos, pos + n, value_copy); 
             }
             else  
@@ -1300,6 +1314,40 @@ void deque<T>:: require_capacity (size_type n, bool isFront)
 }
 
 // reallocate_map_at_front 
+template <typename T>  
+void deque<T>::reallocate_map_at_front(size_type need_buffer)
+{
+    const size_type new_map_size = std::max(_map_size * 2, 
+        _map_size + need_buffer); 
+
+    map_pointer new_map = create_map(new_map_size); 
+    const size_type old_buffer = _end.node - _begin.node + 1; 
+    const size_type new_buffer = old_buffer + need_buffer; 
+
+    // 将新的map 中的指针指向原来的buffer, 并且扩展buffer
+    auto begin = new_map + (new_map_size - new_buffer) / 2; 
+    auto mid = begin + need_buffer; 
+    auto end = mid + old_buffer; 
+    create_buffer(begin, mid - 1); 
+    for(auto begin1 = mid, begin2 = _begin.node; begin1 != end; ++begin1, ++begin2)
+    {
+        *begin1 = *begin2; 
+    }
+
+    // update data 
+    map_allocator::deallocate(_map, _map_size); 
+    _map = new_map;
+    _map_size = new_map_size;
+    _begin = iterator(*mid + (_begin.cur - _begin.first), mid); 
+    _end = iterator(*(end - 1) + (_end.cur - _end.first), end - 1); 
+
+
+}
+
+
+
+
+// reallocate_map_at_back
 template<typename T>  
 void deque<T>::reallocate_map_at_back(size_type need_buffer) 
 {

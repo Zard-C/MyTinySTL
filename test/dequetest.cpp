@@ -1,6 +1,8 @@
 #include <gtest/gtest.h> 
 #include "deque.h" 
 #include <iostream>  
+#include <string>  
+
 
 
 TEST(test1, ctors)
@@ -29,3 +31,45 @@ TEST(test1, ctors)
     std::cout << '\n';
 }
 
+// clear function 
+TEST(test2, dtor)
+{
+    std::string arr[4] = {"one", "two", "three", "four"}; 
+    mystl::deque<std::string> c(arr, arr + sizeof(arr)/sizeof(arr[0])); 
+
+    std::cout<<"The contents of deque<string> are:"; 
+    for(auto it = c.begin(); it != c.end(); ++it)
+    {
+        std::cout << ' ' << *it; 
+    }
+    std::cout<<'\n'; 
+}
+
+
+// memory leak ?!  clear 函数中没有将buffer释放
+TEST(test3, assign) 
+{
+    mystl::deque<int> first;
+    mystl::deque<int> second;
+    mystl::deque<int> third;
+
+    first.assign (7,100);             // 7 ints with a value of 100
+
+    mystl::deque<int>::iterator it;
+    it=first.begin()+1;
+
+    second.assign (it,first.end()-1); // the 5 central values of first
+
+    int myints[] = {1776,7,4};
+    third.assign (myints,myints+3);   // assigning from array.
+
+    std::cout << "Size of first: " << int (first.size()) << '\n';
+    std::cout << "Size of second: " << int (second.size()) << '\n';
+    std::cout << "Size of third: " << int (third.size()) << '\n';
+
+    for(auto it = first.begin(); it != first.end(); ++it)
+    {
+        std::cout << " " <<*it ; 
+    }
+    std::cout << "\n"; 
+}
