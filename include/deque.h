@@ -869,7 +869,7 @@ void deque<T>:: swap(deque& rhs) noexcept
         std::swap(_begin, rhs._begin); 
         std::swap(_end, rhs._end); 
         std::swap(_map, rhs._map); 
-        std::swap(_map_size. rhs._map_size); 
+        std::swap(_map_size, rhs._map_size); 
     }
 }
 
