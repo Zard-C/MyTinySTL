@@ -108,3 +108,28 @@ TEST(test7, swap)
     std::cout << "size of bar: " << bar.size() << '\n';
 
 }
+
+TEST(test8, top)
+{
+    mystl::stack<int> mystack;
+
+    mystack.push(10);
+    mystack.push(20);
+
+    mystack.top() -= 5;
+
+    std::cout << "mystack.top() is now " << mystack.top() << '\n';
+}
+
+TEST(test9, generic_swap)
+{
+    mystl::stack<int> foo,bar;
+    foo.push (10); foo.push(20); foo.push(30);
+    bar.push (111); bar.push(222);
+
+    swap(foo,bar);
+
+    std::cout << "size of foo: " << foo.size() << '\n';
+    std::cout << "size of bar: " << bar.size() << '\n';
+}
+
