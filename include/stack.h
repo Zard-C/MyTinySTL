@@ -97,7 +97,7 @@ public:
         while(!empty()) pop(); 
     }
 
-    void swap(stack&& rhs) noexcept(noexcept(mystl::swap(_c, rhs._c))) 
+    void swap(stack& rhs) noexcept(noexcept(mystl::swap(_c, rhs._c))) 
     {
         mystl::swap(_c, rhs._c); 
     }

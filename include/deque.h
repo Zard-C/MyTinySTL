@@ -537,9 +537,6 @@ void deque<T>::resize(size_type new_size, const value_type& value)
 template <typename T> 
 void deque<T>::shrink_to_fit() noexcept 
 {
-    std::cout << "Inside shrink_to_fit: ";
-    std::cout << _map << ", " << _map_size << "\n"; 
-    std::cout << _begin.node <<", " << _end.node << "\n";
 
     // at least leave head buffer 
     for(auto cur = _map; cur < _begin.node; ++cur) 
