@@ -55,7 +55,7 @@ public:
 
     // move ctor 
     queue(queue&& rhs) noexcept(std::is_nothrow_move_constructible<BaseContainer>::value)
-                        :_c(mystl::move(rhs)) {} 
+                        :_c(mystl::move(rhs._c)) {} 
 
     // operator=  
     queue& operator= (const queue& rhs) 
@@ -67,6 +67,13 @@ public:
     queue& operator= (queue&& rhs) noexcept(std::is_nothrow_move_assignable<BaseContainer>::value)
     {
         _c = mystl::move(rhs._c); 
+        return *this;
+    }
+
+    queue& operator= (std::initializer_list<T> initlist)
+    {
+        _c = initlist; 
+        return *this;
     }
 
     ~queue() = default; 
@@ -150,6 +157,15 @@ template <typename T, typename BaseContainer>
 bool operator >= (const queue<T, BaseContainer>& lhs, const queue<T, BaseContainer>& rhs)
 {
     return !(lhs < rhs); 
+}
+
+
+// generic swap 
+template <typename T, typename BaseContainer>  
+void swap( queue<T, BaseContainer>& lhs,  queue<T, BaseContainer>& rhs)
+{
+    std::cout << "generic swap" << std::endl;
+    lhs.swap(rhs);
 }
 
 // priority_queue 
