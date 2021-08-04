@@ -300,6 +300,13 @@ public:
         _c.pop_back(); 
     }
 
+    void swap(priority_queue & rhs) noexcept(noexcept(mystl::swap(_c, rhs._c)) && 
+                                    noexcept(mystl::swap(_comp, rhs._comp)))
+    {
+        mystl::swap(_c, rhs._c);
+        mystl::swap(_comp, rhs._comp);
+    }
+
     void clear() 
     {
         while(!empty()) pop(); 
