@@ -5,6 +5,7 @@
 #include <initializer_list> 
 #include <cassert> 
 #include <functional> 
+#include "functional.h"
 #include "iterator.h" 
 #include "memory.h" 
 #include "type_traits.h"
@@ -56,6 +57,12 @@ struct rb_tree_value_traits_imp<T, true>
     typedef typename T::second_type                                 mapped_type; 
     typedef T                                                       value_type; 
 
+    template <typename Ty> 
+    static const key_type& get_key(const Ty& value)
+    {
+        return value.first; 
+    }
+
     template <typename Ty>  
     static const value_type& get_value(const Ty& value)
     {
@@ -68,7 +75,7 @@ struct rb_tree_value_traits
 {
     static constexpr bool is_map = mystl::is_pair<T>::value; 
 
-    typedef rb_tree_value_traits_imp<T, is_map> value_traits_type;
+    typedef rb_tree_value_traits_imp<T, is_map>         value_traits_type;
 
     typedef typename value_traits_type::key_type        key_type; 
     typedef typename value_traits_type::mapped_type     mapped_type; 
@@ -106,7 +113,7 @@ struct rb_tree_node_traits
 
 // rb_tree node base 
 template <typename T> 
-struct rb_tree_node_base 
+struct rb_tree_node_base
 {
     typedef rb_tree_color_type              color_type; 
     typedef rb_tree_node_base<T>*           base_ptr; 
@@ -119,7 +126,7 @@ struct rb_tree_node_base
 
     base_ptr get_base_ptr()
     {
-        return &*(this); 
+        return &*this; 
     }
 
     node_ptr get_node_ptr()
@@ -756,6 +763,7 @@ NodePtr rb_tree_erase_rebalance(NodePtr z, NodePtr& root,  NodePtr& leftmost, No
 template <typename T, typename Compar>  
 class rb_tree  
 {
+public:
     typedef rb_tree_traits<T>                           tree_traits; 
     typedef rb_tree_value_traits<T>                     value_traits; 
 
@@ -909,7 +917,7 @@ public:
         size_type n = mystl::distance (first, last); 
         THROW_LENGTH_ERROR_IF(_node_count > max_size() - n, 
                         "rb_tree<T, Comp>'s size too big"); 
-        for(int i = 0; i < n; ++i, +first)
+        for(int i = 0; i < n; ++i, ++first)
         {
             insert_unique(end(), *first); 
         }
@@ -1173,7 +1181,7 @@ rb_tree<T, Compar>:: emplace_unique_use_hint(iterator hint, Args&&...args)
             auto pos = get_insert_unique_pos(key); 
             if(!pos.second)
             {
-                destory_node(np); 
+                destroy_node(np); 
                 return pos.first.first; 
             }
             return insert_node_at(pos.first.first, np, pos.first.second); 
@@ -1298,6 +1306,7 @@ void rb_tree<T, Compar>:: clear()
         rightmost() = _header; 
         _node_count = 0; 
     }
+    base_allocator::deallocate(_header); // remember to deallocated _header 
 }
 
 // find key and return its iterator 
@@ -1532,6 +1541,8 @@ rb_tree<T, Compar>::get_insert_unique_pos(const key_type& key)
     auto y = _header; 
     bool add_to_left = true; 
 
+    
+#if 1
     while(x != nullptr) 
     {   
         y = x; 
@@ -1544,7 +1555,7 @@ rb_tree<T, Compar>::get_insert_unique_pos(const key_type& key)
     {
         if(y == _header || ite == begin())
         {
-            return mystl::make_pair(mystl::make_pair(y, true), true); 
+            return mystl::make_pair(mystl::make_pair(rb_tree<T, Compar>::base_ptr(y), true), true); 
         }
         else  
         {
@@ -1552,12 +1563,13 @@ rb_tree<T, Compar>::get_insert_unique_pos(const key_type& key)
         }
     }
     
-    if(_key_comp(value_traits::get_key(*ite()), key))
+    if(_key_comp(value_traits::get_key(*ite), key))
     {
-        return mystl::make_pair(mystl::make_pair(y, add_to_left), true); 
+        return mystl::make_pair(mystl::make_pair(rb_tree<T, Compar>::base_ptr(y), mystl::move(add_to_left)), true); 
     }
 
-    return mystl::make_pair(mystl::make_pair(y, add_to_left), false); 
+    return mystl::make_pair(mystl::make_pair(rb_tree<T, Compar>::base_ptr(y), mystl::move(add_to_left)), false); 
+    #endif 
 }
 
 // insert_value_at  
@@ -1669,7 +1681,7 @@ insert_unique_use_hint(iterator hint, key_type key, node_ptr node)
     --before; 
     auto bnp = before.node; 
     if(_key_comp(value_traits::get_key(*before), key) && 
-        _key_comp(key, value_traits::get_key((hint)))) 
+        _key_comp(key, value_traits::get_key((*hint)))) 
     {
         // before < node < hint 
         if(bnp->right == nullptr)
@@ -1737,8 +1749,8 @@ void rb_tree<T, Compar>::erase_since(base_ptr x)
 {
     while(x != nullptr)
     {
-        erase_since(x->right); 
-        auto y = x->left; 
+        erase_since(x->left); 
+        auto y = x->right; 
         destroy_node(x->get_node_ptr()); 
         x = y; 
     }

@@ -263,7 +263,7 @@ public:
     // 重载成员访问操作符
     pointer operator-> () const 
     {
-        return &(operator*());
+        return &(operator*()); // -> 传递性
     }
 
     // 前进++ 变为 后退--

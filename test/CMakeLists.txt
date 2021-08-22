@@ -8,7 +8,7 @@ set(This unitTest)
 
 # 定义Sources 变量 值为ExampleTest.cpp 
 set (Sources 
-    priority_queuetest.cpp
+    rbtreetest.cpp
 )
 
 # 给工程设置名称
