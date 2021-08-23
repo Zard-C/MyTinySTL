@@ -93,6 +93,7 @@ public:
     map& operator= (map&& rhs)
     {
         _tree = mystl::move(rhs._tree); 
+        return *this;
     }
 
     map& operator= (std::initializer_list<value_type> initlist)
@@ -104,7 +105,7 @@ public:
 
     // 
     key_compare     key_comp()      const { return _tree.key_comp(); } 
-    value_compare   value_comp()    const { return value_compare(); } 
+    value_compare   value_comp()    const { return value_compare(_tree.key_comp()); } 
     allocator_type  get_allocator() const { return _tree.get_allocator(); } 
 
     // iterator 
@@ -230,7 +231,7 @@ public:
     iterator        find(const key_type& key)                 { return _tree.find(key); } 
     const_iterator  find(const key_type& key)           const { return _tree.find(key); } 
 
-    size_type       count(const key_type& key)          const { return _tree.count(key); } 
+    size_type       count(const key_type& key)          const { return _tree.count_multi(key); } 
 
     iterator        lower_bound(const key_type& key)          { return _tree.lower_bound(key); } 
     const_iterator  lower_bound(const key_type& key)    const { return _tree.lower_bound(key); } 

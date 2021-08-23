@@ -716,7 +716,7 @@ NodePtr rb_tree_erase_rebalance(NodePtr z, NodePtr& root,  NodePtr& leftmost, No
                     brother = xp->left; 
                 }
 
-                if((brother->left == nullptr || !rb_treeisred(brother->left)) &&  
+                if((brother->left == nullptr || !rb_tree_is_red(brother->left)) &&  
                    (brother->right == nullptr || !rb_tree_is_red(brother->right)))  
                 {
                     // case 2 
@@ -817,7 +817,11 @@ public:
     rb_tree& operator= (const rb_tree& rhs);
     rb_tree& operator= (rb_tree&& rhs); 
 
-    ~rb_tree() { clear(); }
+    ~rb_tree() 
+    { 
+        clear(); 
+        base_allocator::deallocate(_header); // remember to deallocated _header 
+    }
 
 public:  
     // iterator options
@@ -971,8 +975,9 @@ public:
     equal_range_unique(const key_type& key)
     {
         iterator it = find(key);
-        auto next = it; 
-        return it == end()? mystl::make_pair(it, it): mystl::make_pair(it, ++next); 
+        iterator next = it; 
+        return it == end()? mystl::pair<iterator, iterator>(it, it): mystl::pair<iterator, iterator>(it, ++next);
+        //return it == end()? mystl::make_pair(it, it): mystl::make_pair(it, ++next); 
     }
 
     mystl::pair<const_iterator, const_iterator> 
@@ -1071,6 +1076,7 @@ template <typename T, typename Compar>
 rb_tree<T, Compar>& rb_tree<T, Compar>:: operator=(rb_tree&& rhs)
 {
     clear(); 
+    base_allocator::deallocate(_header);    // don't forget free _header 
     _header = mystl::move(rhs._header); 
     _node_count = rhs._node_count; 
     _key_comp = rhs._key_comp; 
@@ -1103,7 +1109,7 @@ rb_tree<T, Compar>:: emplace_unique(Args&& ...args)
     node_ptr np = create_node(mystl::forward<Args>(args)...); 
     auto res = get_insert_unique_pos(value_traits::get_key(np->value)); 
 
-    if(res.second != nullptr)
+    if(res.second)
     {
         // insert succeed
         return mystl::make_pair(insert_node_at(res.first.first, np, res.first.second), true); 
@@ -1306,7 +1312,6 @@ void rb_tree<T, Compar>:: clear()
         rightmost() = _header; 
         _node_count = 0; 
     }
-    base_allocator::deallocate(_header); // remember to deallocated _header 
 }
 
 // find key and return its iterator 
