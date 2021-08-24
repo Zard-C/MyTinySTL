@@ -523,7 +523,7 @@ TEST(test28, upper_bound)
 
 TEST(test29, value_comp)
 {
-  mystl::map<const char,int> mymap;
+  mystl::map<char,int> mymap;
 
   mymap['x']=1001;
   mymap['y']=2002;
@@ -531,11 +531,78 @@ TEST(test29, value_comp)
 
   std::cout << "mymap contains:\n";
 
-  mystl::pair<const char,int> highest = *mymap.rbegin();          // last element
+  //mystl::pair<char,int> highest = *mymap.rbegin();          // last element
+  // *mymap.begin() is a pair<const char, int> type 
+  std::cout << std::is_same<mystl::pair<const char, int>, mystl::map<char, int>::value_type>::value << std::endl;
+}
 
-  mystl::map<const char,int>::iterator it = mymap.begin();
-  do {
-    std::cout << it->first << " => " << it->second << '\n';
-  } while ( mymap.value_comp()(*it++, highest) );
+// remove_cv 
+TEST(test30, remove_cv)
+{
+    typedef std::remove_cv<const int>::type type1;
+    typedef std::remove_cv<volatile int>::type type2;
+    typedef std::remove_cv<const volatile int>::type type3;
+    typedef std::remove_cv<const volatile int*>::type type4;
+    typedef std::remove_cv<int * const volatile>::type type5;
+ 
+    std::cout << "test1 " << (std::is_same<int, type1>::value
+        ? "passed" : "failed") << '\n';
+    std::cout << "test2 " << (std::is_same<int, type2>::value
+        ? "passed" : "failed") << '\n';
+    std::cout << "test3 " << (std::is_same<int, type3>::value
+        ? "passed" : "failed") << '\n';
+    std::cout << "test4 " << (std::is_same<const volatile int*, type4>::value
+        ? "passed" : "failed") << '\n';
+    std::cout << "test5 " << (std::is_same<int*, type5>::value
+        ? "passed" : "failed") << '\n';
+}
 
+#if 1
+TEST(test31, insert)
+{
+  mystl::map<char,int> mymap;
+
+  // first insert function version (single parameter):
+  mymap.insert ( mystl::pair<char,int>('a',100) );
+  mymap.insert ( mystl::pair<char,int>('z',200) );
+
+  mystl::pair<mystl::map<char,int>::iterator,bool> ret;
+  ret = mymap.insert ( mystl::pair<char,int>('z',500) );
+  if (ret.second==false) {
+    std::cout << "element 'z' already existed";
+    std::cout << " with a value of " << ret.first->second << '\n';
+  }
+
+}
+#endif 
+
+TEST(test32, pair)
+{
+  std::pair<char, int>(); 
+  mystl::pair<char, int> p1 = {'a', 1}; 
+  
+  mystl::pair<const char, int> p2 = p1;
+  typedef const char Other1;
+  typedef int        Other2; 
+  typedef const char U1; 
+  typedef int        U2; 
+
+  typedef char        T1; 
+  typedef int          T2;
+
+  std::cout << 
+    (std::is_default_constructible<Other1>::value &&
+    std::is_default_constructible<Other2>::value) << std::endl;
+
+    std::cout << 
+      (std::is_copy_constructible<U1>::value && 
+    std::is_copy_constructible<U2>::value &&
+    std::is_convertible<const U1&, T1>::value && 
+    std::is_convertible<const U2&, T2>::value) << std::endl;
+
+    std::cout << (std::is_constructible<T1, Other1>::value && 
+     std::is_constructible<T2, Other2>::value && 
+     (!std::is_convertible<Other1, T1>::value || 
+      !std::is_convertible<Other2, T1>::value)) << std::endl;
+  
 }

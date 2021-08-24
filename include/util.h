@@ -103,6 +103,16 @@ struct pair
     second(mystl::forward<Other2>(other.second))
     {}
 
+    // implicit construcible for pair<U1, U2> 
+    template<typename U1 = T1 , typename U2 = T2, 
+    typename std::enable_if< 
+    std::is_copy_constructible<U1>::value && 
+    std::is_copy_constructible<U2>::value &&
+    std::is_convertible<const U1&, T1>::value && 
+    std::is_convertible<const U2&, T2>::value, int>::type =0> 
+    constexpr pair(const pair<U1, U2> & other): first(other.first), second(other.second) 
+    {}
+
 
     // default ctors
     pair(const pair& rhs) = default; 
@@ -217,7 +227,7 @@ void swap(pair<T1, T2>& lhs, pair<T1, T2>& rhs)
 template<typename T1, typename T2> 
 pair<T1, T2> make_pair(T1&& first, T2&& second)
 {
-    return pair<T1, T2>(mystl::forward<T1>(first), mystl::forward<T2>(second)); 
+    return pair<T1, T2>(std::forward<T1>(first), std::forward<T2>(second)); 
 }
 
 
