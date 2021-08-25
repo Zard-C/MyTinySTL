@@ -1139,7 +1139,7 @@ rb_tree<T, Compar>:: emplace_multi_use_hint(iterator hint, Args&& ...args)
     {
         if(_key_comp(key, value_traits::get_key(*hint)))
         {
-            return insert_node_at(hint.node, true);
+            return insert_node_at(hint.node, np, true);
         }
         else   
         {
@@ -1660,7 +1660,7 @@ insert_multi_use_hint(iterator hint, key_type key,  node_ptr node)
     --before; 
     auto bnp = before.node; 
     if(!_key_comp(key, value_traits::get_key(*before)) && 
-       !_key_comp(value_traits::get_key(*hint, key)))
+       !_key_comp(value_traits::get_key(*hint), key))
     {
         if(bnp->right == nullptr) 
         {

@@ -330,7 +330,7 @@ public:
     typedef typename base_type::const_reference             const_reference; 
     typedef typename base_type::iterator                    iterator; 
     typedef typename base_type::const_iterator              const_iterator; 
-    typedef typename base_type::reverse_iteator             reverse_iterator; 
+    typedef typename base_type::reverse_iterator             reverse_iterator; 
     typedef typename base_type::const_reverse_iterator      const_reverse_iterator; 
     typedef typename base_type::size_type                   size_type; 
     typedef typename base_type::difference_type             difference_type; 
