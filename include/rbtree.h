@@ -611,7 +611,7 @@ NodePtr rb_tree_erase_rebalance(NodePtr z, NodePtr& root,  NodePtr& leftmost, No
         }
         else if (rb_tree_is_lchild(z))
         {
-            z->parent->right = y; 
+            z->parent->left = y; 
         }
         else   
         {
@@ -793,7 +793,7 @@ public:
     typedef mystl::reverse_iterator<iterator>           reverse_iterator; 
     typedef mystl::reverse_iterator<const_iterator>     const_reverse_iterator; 
 
-    allocator_type get_allocator() const {return node_allocator();  } 
+    allocator_type get_allocator() const {return data_allocator();  } 
     key_compare     key_comp()     const {return _key_comp; }
 
 private:  
@@ -1250,10 +1250,11 @@ rb_tree<T, Compar>::erase(iterator hint)
     auto node = hint.node->get_node_ptr(); 
     iterator next(node); 
     ++next; 
+
     rb_tree_erase_rebalance(hint.node, root(), leftmost(), rightmost()); 
     destroy_node(node);
     --_node_count; 
-    return next; 
+    return next;
 }
 
 // remove elems which equals to key and return num of elems 

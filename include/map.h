@@ -382,7 +382,7 @@ public:
 
     // 
     key_compare                 key_comp()      const {return _tree.key_comp(); } 
-    value_compare               value_comp()    const {return value_comp(_tree.comp()); } 
+    value_compare               value_comp()    const {return value_compare(_tree.key_comp()); } 
     allocator_type              get_allocator() const {return _tree.get_allocator(); }
 
     // iterator 
@@ -465,6 +465,8 @@ public:
     void            erase(iterator first, iterator last)  
     { _tree.erase(first, last);  } 
 
+    void clear() {_tree.clear(); }
+
     // multimap -> search 
 
     iterator        find(const key_type& key)    
@@ -478,7 +480,7 @@ public:
 
     size_type       count(const key_type& key)  const 
     {
-        return _tree.count(key); 
+        return _tree.count_multi(key); 
     } 
 
     iterator        lower_bound(const key_type& key) 
