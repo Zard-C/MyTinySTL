@@ -432,6 +432,10 @@ public:
     iterator        lower_bound(const key_type& key)        { return _tree.lower_bound(key); } 
     const_iterator  lower_bound(const key_type& key) const  { return _tree.lower_bound(key); } 
 
+    iterator        upper_bound(const key_type& key)        { return _tree.upper_bound(key); } 
+    const_iterator  upper_bound(const key_type& key) const  { return _tree.upper_bound(key); } 
+
+
     pair<iterator, iterator> equal_range(const key_type& key)
     { return _tree.equal_range_multi(key); } 
     pair<const iterator, const iterator>

@@ -298,3 +298,179 @@ TEST(test18, key_comp)
 
     std::cout << '\n';
 }
+
+TEST(test19, lower_bound) 
+{
+    mystl::multiset<int> mymultiset;
+    mystl::multiset<int>::iterator itlow,itup;
+
+    for (int i=1; i<8; i++) mymultiset.insert(i*10); // 10 20 30 40 50 60 70
+
+    itlow = mymultiset.lower_bound (30);             //       ^
+    itup = mymultiset.upper_bound (40);              //             ^
+
+    mymultiset.erase(itlow,itup);                    // 10 20 50 60 70
+
+    std::cout << "mymultiset contains:";
+    for (mystl::multiset<int>::iterator it=mymultiset.begin(); it!=mymultiset.end(); ++it)
+        std::cout << ' ' << *it;
+    std::cout << '\n';
+}
+
+TEST(test20, max_size)
+{
+    mystl::multiset<int> mymultiset;
+
+    if (mymultiset.max_size()>1000)
+    {
+        for (int i=0; i<1000; i++) mymultiset.insert(i);
+            std::cout << "The multiset contains 1000 elements.\n";
+    }
+    else std::cout << "The multiset could not hold 1000 elements.\n";
+}
+
+TEST(test21, operator_equal)
+{
+    int myints[]={ 19,81,36,36,19 };
+    mystl::multiset<int> first (myints,myints+5);   // multiset with 5 ints
+    mystl::multiset<int> second;                    // empty multiset
+
+    second=first;                                 // now second contains the 5 ints
+    first=mystl::multiset<int>();                   // and first is empty
+
+    std::cout << "Size of first: " << first.size() << '\n';
+    std::cout << "Size of second: " << second.size() << '\n';
+}
+
+TEST(test22, rbegin)
+{
+    int myints[] = {77,16,2,30,30};
+    mystl::multiset<int> mymultiset (myints,myints+5);
+
+    std::cout << "mymultiset contains:";
+    for (mystl::multiset<int>::reverse_iterator rit=mymultiset.rbegin(); rit!=mymultiset.rend(); ++rit)
+    std::cout << ' ' << *rit;
+
+    std::cout << '\n';
+}
+
+TEST(test23, rend) 
+{
+    int myints[] = {77,16,2,30,30};
+    mystl::multiset<int> mymultiset (myints,myints+5);
+
+    std::cout << "mymultiset contains:";
+    for (mystl::multiset<int>::reverse_iterator rit=mymultiset.rbegin() ; rit!=mymultiset.rend(); ++rit)
+    std::cout << ' ' << *rit;
+
+    std::cout << '\n';
+}
+
+TEST(test24, size)
+{
+    mystl::multiset<int> myints;
+    std::cout << "0. size: " << myints.size() << '\n';
+
+    for (int i=0; i<10; i++) myints.insert(i);
+        std::cout << "1. size: " << myints.size() << '\n';
+
+    myints.insert (5);
+    std::cout << "2. size: " << myints.size() << '\n';
+
+    myints.erase (5);
+    std::cout << "3. size: " << myints.size() << '\n';
+}
+
+TEST(test25, swap)
+{
+    int myints[]={19,72,4,36,20,20};
+    mystl::multiset<int> first (myints,myints+3);     // 4,19,72
+    mystl::multiset<int> second (myints+3,myints+6);  // 20,20,36
+
+    first.swap(second);
+
+    std::cout << "first contains:";
+    for (mystl::multiset<int>::iterator it=first.begin(); it!=first.end(); ++it)
+    std::cout << ' ' << *it;
+    std::cout << '\n';
+
+    std::cout << "second contains:";
+    for (mystl::multiset<int>::iterator it=second.begin(); it!=second.end(); ++it)
+    std::cout << ' ' << *it;
+    std::cout << '\n';
+}
+
+TEST(test27, upper_bound) 
+{
+    mystl::multiset<int> mymultiset;
+    mystl::multiset<int>::iterator itlow,itup;
+
+    for (int i=1; i<8; i++) mymultiset.insert(i*10); // 10 20 30 40 50 60 70
+
+    itlow = mymultiset.lower_bound (30);             //       ^
+    itup = mymultiset.upper_bound (40);              //             ^
+
+    mymultiset.erase(itlow,itup);                    // 10 20 50 60 70
+
+    std::cout << "mymultiset contains:";
+    for (mystl::multiset<int>::iterator it=mymultiset.begin(); it!=mymultiset.end(); ++it)
+    std::cout << ' ' << *it;
+    std::cout << '\n';
+}
+
+TEST(test28, value_comp)
+{
+    mystl::multiset<int> mymultiset;
+
+    mystl::multiset<int>::value_compare mycomp = mymultiset.value_comp();
+
+    for (int i=0; i<7; i++) mymultiset.insert(i);
+
+    std::cout << "mymultiset contains:";
+
+    int highest = *mymultiset.rbegin();
+    mystl::multiset<int>::iterator it = mymultiset.begin();
+    do {
+    std::cout << ' ' << *it;
+    } while ( mycomp(*it++,highest) );
+
+    std::cout << '\n';
+}
+
+TEST(test29, relational_operators)
+{
+    mystl::multiset<int> foo,bar;
+  foo.insert(10);
+  bar.insert(20);
+  bar.insert(20);
+  foo.insert(30);
+
+  // foo ({10,30}) vs bar ({20,20}):
+  if (foo==bar) std::cout << "foo and bar are equal\n";
+  if (foo!=bar) std::cout << "foo and bar are not equal\n";
+  if (foo< bar) std::cout << "foo is less than bar\n";
+  if (foo> bar) std::cout << "foo is greater than bar\n";
+  if (foo<=bar) std::cout << "foo is less than or equal to bar\n";
+  if (foo>=bar) std::cout << "foo is greater than or equal to bar\n";
+
+}
+
+TEST(test30, generic_swap)
+{
+    int myints[]={12,75,12,35,20,35};
+    mystl::multiset<int> first (myints,myints+3);     // 12,12,75
+    mystl::multiset<int> second (myints+3,myints+6);  // 20,35,35
+
+    swap(first,second);
+
+    std::cout << "first contains:";
+    for (mystl::multiset<int>::iterator it=first.begin(); it!=first.end(); ++it)
+    std::cout << ' ' << *it;
+    std::cout << '\n';
+
+    std::cout << "second contains:";
+    for (mystl::multiset<int>::iterator it=second.begin(); it!=second.end(); ++it)
+    std::cout << ' ' << *it;
+    std::cout << '\n';
+
+}
