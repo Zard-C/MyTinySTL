@@ -2,7 +2,7 @@
 #include <gtest/gtest.h> 
 #include "set.h"
 
-bool fncomp (int lhs, int rhs) {return lhs<rhs;}
+static bool fncomp (int lhs, int rhs) {return lhs<rhs;}
 
 struct classcomp {
   bool operator() (const int& lhs, const int& rhs) const

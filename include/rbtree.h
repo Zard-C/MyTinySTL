@@ -1221,7 +1221,7 @@ rb_tree<T, Compar>:: insert_multi(const value_type& value)
 {
     THROW_LENGTH_ERROR_IF(_node_count > max_size() - 1, 
                     "rb_tree<T, Comp>'s size too big"); 
-    auto res = get_insert_multi_pos(value_traits::get_key);
+    auto res = get_insert_multi_pos(value_traits::get_key(value));
     return insert_value_at(res.first, value, res.second); 
 }
 

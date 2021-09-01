@@ -297,7 +297,7 @@ public:
     // initialize list 
     multiset(std::initializer_list<value_type> ilist): _tree() 
     {   
-        _tree.insert(ilist.begin(), ilist.end()); 
+        _tree.insert_multi(ilist.begin(), ilist.end()); 
     }
 
     // copy ctor 
@@ -411,13 +411,16 @@ public:
     template <typename InputIter>  
     void insert(InputIter first, InputIter last)
     {
-        _tree.insert(first, last); 
+        _tree.insert_multi(first, last); 
     }
 
     // erase 
     void        erase(iterator position)            {_tree.erase(position); } 
-    size_type   erase(const key_type& key)          {_tree.erase_multi(key); } 
+    size_type   erase(const key_type& key)          { return _tree.erase_multi(key); } 
     void        erase(iterator first, iterator last) {_tree.erase(first, last); } 
+
+    // clear 
+    void        clear() {_tree.clear(); }
 
     // search operation 
 
