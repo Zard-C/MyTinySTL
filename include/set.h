@@ -432,14 +432,71 @@ public:
     pair<iterator, iterator> equal_range(const key_type& key)
     { return _tree.equal_range_multi(key); } 
     pair<const iterator, const iterator>
-    equal_range(const key_type& key)
+    equal_range(const key_type& key) const 
     {
         return _tree.equal_range_multi(key); 
     }
+
+    // swap 
+    void swap(multiset& rhs) noexcept 
+    {
+        _tree.swap(rhs._tree); 
+    } 
+
+public:
+    friend bool operator== (const multiset& lhs, const multiset& rhs)
+    {
+        return lhs._tree == rhs._tree; 
+    }
+    friend bool operator < (const multiset& lhs, const multiset& rhs)
+    {
+        return lhs._tree < rhs._tree; 
+    }
 }; 
 
+// relational operators 
+template <typename Key, typename Compar>  
+bool operator == (const multiset<Key, Compar>& lhs, const multiset<Key, Compar>& rhs)
+{
+    return lhs == rhs; 
+}
+
+template <typename Key, typename Compar> 
+bool operator != (const multiset<Key, Compar>& lhs, const multiset<Key, Compar>& rhs) 
+{
+    return !(lhs == rhs); 
+}
+
+template <typename Key, typename Compar>  
+bool operator < (const multiset<Key, Compar>& lhs, const multiset<Key, Compar>& rhs) 
+{
+    return lhs < rhs; 
+}
+
+template <typename Key, typename Compar>  
+bool operator > ( const multiset<Key, Compar>& lhs, const multiset<Key, Compar>& rhs)
+{
+    return rhs < lhs; 
+}
+
+template <typename Key, typename Compar>  
+bool operator <=(const multiset<Key, Compar>& lhs, const multiset<Key, Compar>& rhs)
+{
+    return !(rhs < lhs); 
+}
+
+template <typename Key, typename Compar>  
+bool operator >= (const multiset<Key, Compar>& lhs, const multiset<Key, Compar>& rhs)
+{
+    return !(lhs < rhs); 
+}
 
 
-
+// overloading generic swap 
+template <typename Key, typename Compar>  
+void swap(multiset <Key, Compar>& lhs, multiset<Key, Compar>& rhs) noexcept 
+{
+    lhs.swap(rhs); 
+}
 }   // end of namespace mystl 
 #endif // !SET_H_
