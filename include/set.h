@@ -177,7 +177,7 @@ public:
     // erase 
     void        erase(iterator position)        { _tree.erase(position); } 
     size_type   erase(const key_type& key)      { return _tree.erase_unique(key); }
-    void        erase(iterator first, iterator last) { return _tree.erase_unique(first, last); } 
+    void        erase(iterator first, iterator last) { return _tree.erase(first, last); } 
 
     // clear 
     void        clear()                         { _tree.clear(); } 
@@ -220,6 +220,11 @@ bool operator== (const set<Key, Compar>& lhs, const set<Key, Compar>& rhs)
     return lhs == rhs; 
 }
 
+template <typename Key, typename Compar> 
+bool operator!= (const set<Key, Compar>& lhs, const set<Key, Compar>& rhs) 
+{
+    return !(lhs == rhs);
+}
 template <typename Key, typename Compar>  
 bool operator< (const set<Key, Compar>& lhs, const set<Key, Compar>& rhs)
 {
