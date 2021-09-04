@@ -27,7 +27,7 @@ OutputIter set_union(InputIter1 first1, InputIter1 last1,
         }
         else  
         {
-            *result = *result; 
+            *result = *first1; 
             ++first1; 
             ++first2; 
         }
