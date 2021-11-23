@@ -5,8 +5,7 @@
 // template hashtable 
 // 使用开链法来解决哈希冲突
 
-#include <initializer_list> . 
-
+#include <initializer_list>  
 #include "algo.h"
 #include "functional.h"
 #include "memory.h"
