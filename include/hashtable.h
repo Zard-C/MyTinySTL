@@ -556,7 +556,49 @@ private:
         return iterator(nullptr, this);
     }
 
-}; 
+public: 
+    // ctor 
+    explicit hashtable(size_type bucket_count, const Hash&hash = Hash(), 
+        const KeyEqual& equal = KeyEqual()): 
+        size_(0), mlf_(1.0f), hash_(hash), equal_(equal)
+        {
+            init(bucket_count); 
+        }
+
+
+template<typename Iter, typename std::enable_if<mystl::is_input_iterator<Iter>::value, int>::type = 0> 
+hashtable(Iter first, Iter last, 
+            size_type bucket_count, 
+            const Hash& hash = Hash(), 
+            const KeyEqual& equal = KeyEqual()): 
+            size_(0), mlf_(1.0f), hash_(hash), equal_(equal)
+            {
+                init(std::max(bucket_count, static_cast<size_type>(mystl::distance(first, last)));
+            }
+
+hashtable(const hashtable& rhs): hash_(rhs.hash_), equal_(rhs.euqal)
+{
+    copy_init(rhs);
+}
+
+hashtable(hashtable&& rhs ) noexcept: bucket_size_(rhs.bucket_size_), 
+size_(rhs.size_), mlf_(rhs.mlf_), hash_(rhs.hash()), equal_(rhs.equal)
+{
+    buckets_ =mystl::move(rhs.buckets_);
+    rhs.bucket_size_ = 0; 
+    rhs.size_ = 0;
+    rhs.mlf_ = 0.0f; 
+}
+
+hashtable & operator=(const hashtable& rhs); 
+hashtable & operator=(hashtable&& rhs) noexcept; 
+
+~hashtable(); 
+
+
+}; // end of class hashtable
+
+
 
 
 
