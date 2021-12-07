@@ -573,7 +573,7 @@ hashtable(Iter first, Iter last,
             const KeyEqual& equal = KeyEqual()): 
             size_(0), mlf_(1.0f), hash_(hash), equal_(equal)
             {
-                init(std::max(bucket_count, static_cast<size_type>(mystl::distance(first, last)));
+                init(std::max(bucket_count, static_cast<size_type>(mystl::distance(first, last))));
             }
 
 hashtable(const hashtable& rhs): hash_(rhs.hash_), equal_(rhs.euqal)
