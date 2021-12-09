@@ -620,7 +620,7 @@ size_type   max_size()      const noexcept { return static_cast<size_type>(-1); 
 // emplace / emplace_hint 
 
 template <typename ...Args>  
-iterator    emplace_mulit(Args&& ... args); 
+iterator    emplace_multi(Args&& ... args); 
 
 template <typename ...Args>  
 pair<iterator, bool> emplace_unique(Args&& ...args); 
@@ -813,6 +813,74 @@ private:
 }; // end of class hashtable
 
 // method 实现 
+
+// copy assign 
+template <typename T, typename Hash, typename KeyEqual>  
+hashtable<T, Hash, KeyEqual>&  hashtable<T, Hash, KeyEqual>::
+operator= (const hashtable& rhs) 
+{
+    if(this != &rhs)
+    {
+        hashtable temp(rhs);
+        swap(temp);
+    }
+    return *this; // ? 
+}
+
+// move assign 
+template <typename T, typename Hash, typename KeyEqual>  
+hashtable<T, Hash, KeyEqual>&  hashtable<T, Hash, KeyEqual>::
+operator= (hashtable&& rhs) noexcept
+{
+    hashtable temp(mystl::move(rhs)); 
+    swap(temp); 
+    return *this; 
+} 
+
+// 就地构造元素，键值允许重复
+// 强异常安全保证
+template <typename T, typename Hash, typename KeyEqual> 
+template <typename ...Args>  
+typename hashtable<T, Hash, KeyEqual>::iterator   
+hashtable<T, Hash, KeyEqual>::
+emplace_multi(Args&& ...args)
+{
+    auto np = create_node(mystl::forward<Args>(args)...); 
+    try
+    {
+        if((float)(size_ + 1) > (float)bucket_size_ * max_load_factor())
+            rehash(size_ + 1); 
+    }
+    catch(...)
+    {
+        destroy_node(np); 
+        throw; 
+    }
+    return insert_node_multi(np); 
+}
+
+// 就地构造元素，键值不允许重复
+// 强异常安全保证 
+template <typename T, typename Hash, typename KeyEqual> 
+template <typename ...Args>  
+pair<typename hashtable<T, Hash, KeyEqual>::iterator, bool>  
+hashtable<T, Hash, KeyEqual>::
+emplace_unique(Args&& ...args)
+{
+    auto np = create_node(mystl::forward<Args>(args)...); 
+    try
+    {
+        if((float)(size_ + 1) > (float)bucket_size_ * max_load_factor())
+            rehash(size_ + 1); 
+    }
+    catch(...)
+    {
+        destroy_node(np); 
+        throw; 
+    }
+    
+    return insert_node_unique(np);
+}
 
 
 
