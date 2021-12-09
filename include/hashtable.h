@@ -698,7 +698,7 @@ pair<iterator, iterator>                equal_range_multi(const key_type& key);
 pair<const_iterator, const_iterator>    equal_range_multi(const key_type& key) const ; 
 
 pair<iterator, iterator>                equal_range_unique(const key_type& key); 
-pair<const_iterator, const_iterator>    euqal_range_unique(const key_type& key) const; 
+pair<const_iterator, const_iterator>    equal_range_unique(const key_type& key) const; 
 
 // bucket interface 
 
@@ -1202,7 +1202,56 @@ equal_range_multi(const key_type& key) const
     return mystl::make_pair(cend(), cend());     
 }
 
+template <typename T, typename Hash, typename KeyEqual>  
+pair<typename hashtable<T, Hash, KeyEqual>::iterator, 
+     typename hashtable<T, Hash, KeyEqual>::iterator>  
+hashtable<T, Hash, KeyEqual>:: 
+equal_range_unique(const key_type& key)
+{
+    const auto n = hash(key); 
+    for(node_ptr first = buckets_[n]; first; first = first->next)
+    {
+        if(is_equal(value_traits::get_key(first->value), key))
+        {
+            if(first->next)
+                return mystl::make_pair(iterator(first, this), iterator(first->next, this)); 
+            for(auto m = n + 1; m < bucket_size_; ++m)
+            {
+                if(buckets_[m])
+                    return mystl::make_pair(iterator(first, this), iterator(buckets_[m], this));
+            }
+            return mystl::make_pair(iterator(first, this), end()); 
+        }
+    }
+    return mystl::make_pair(end(), end()); 
+}
 
+template <typename T, typename Hash, typename KeyEqual>  
+pair<typename hashtable<T, Hash, KeyEqual>::const_iterator, 
+     typename hashtable<T, Hash, KeyEqual>::const_iterator>  
+hashtable<T, Hash, KeyEqual>::  
+equal_range_unique(const key_type& key) const  
+{
+    const auto n = hash(key); 
+    for(node_ptr first = buckets_[n]; first; first = first->next)
+    {
+        if(is_equal(value_traits::get_key(first->value), key))
+        {
+            if(first->next)
+                return mystl::make_pair(M_cit(first), M_cit(first->next)); 
+            for(auto m = n + 1; m < bucket_size_; ++m)
+            {
+                if(buckets_[m])
+                    return mystl::make_pair(M_cit(first), M_cit(buckets_[m]));
+            }
+            return mystl::make_pair(M_cit(first), cend()); 
+        }
+    }
+    return mystl::make_pair(cend(), cend()); 
+
+
+
+}
 
 
 }   // end of namespace mystl 
