@@ -1248,11 +1248,357 @@ equal_range_unique(const key_type& key) const
         }
     }
     return mystl::make_pair(cend(), cend()); 
-
-
-
 }
 
+// 交换 hashtable 
+template <typename T, typename Hash, typename KeyEqual> 
+void hashtable<T, Hash, KeyEqual>::   
+swap(hashtable& rhs) noexcept  
+{
+    if(this != &rhs)
+    {
+        buckets_.swap(rhs.buckets_); 
+        mystl::swap(bucket_size_, rhs.bucket_size_); 
+        mystl::swap(size_, rhs.size_);
+        mystl::swap(mlf_, rhs.mlf_); 
+        mystl::swap(hash_, rhs.hash_); 
+        mystl::swap(equal_, rhs.equal_);  
+    }
+}
+
+// helper function 
+
+
+// init 
+template <typename T, typename Hash, typename KeyEqual>  
+void hashtable<T, Hash, KeyEqual>::init(size_type n)
+{
+    const auto buckets_nums = next_size(n); 
+    try
+    {
+        buckets_.reserve(buckets_nums); 
+        buckets_.assign(buckets_nums, nullptr); 
+    }
+    catch(...)
+    {
+        bucket_size_ = 0; 
+        size_ = 0; 
+        throw; 
+    }
+    bucket_size_ = buckets_.size(); 
+}
+
+// copy init; 
+template <typename T, typename Hash, typename KeyEqual>  
+void hashtable<T, Hash, KeyEqual>::   
+copy_init(const hashtable& ht)
+{
+    bucket_size_ = 0; 
+    buckets_.reserve(ht.bucket_size_); 
+    buckets_.assign(ht.bucket_size_, nullptr); 
+    
+    try
+    {
+        for(size_type i = 0; i < ht.bucket_size_; ++i)  
+        {
+            node_ptr cur = ht.buckets_[i]; 
+            if(cur)
+            {
+                auto copy = create_node(cur->value); 
+                buckets_[i] = copy; 
+                for(auto next = cur->next; next; next = cur->next)
+                {
+                    // copy list 
+                    copy ->next = create_node(next->value); 
+                    copy = copy->next; 
+                }
+                copy -> next = nullptr;  
+            }
+        }
+
+        bucket_size_ = ht.bucket_size_; 
+        mlf_ = ht.mlf_; 
+        size_ = ht.size_; 
+    }
+    catch(...)
+    {
+        clear(); 
+    }
+}
+
+// create_node 
+template <typename T, typename Hash, typename KeyEqual>  
+template <typename ...Args>  
+typename hashtable<T, Hash, KeyEqual>:: node_ptr 
+hashtable<T, Hash, KeyEqual>::    
+create_node(Args&& ...args)
+{
+    node_ptr temp = node_allocator::allocate(1); 
+    
+    try
+    {
+        data_allocator::construct(mystl::address_of(temp->value), mystl::forward<Args>(args)...); 
+        temp -> next = nullptr; 
+    }
+    catch(...)
+    {
+        node_allocator::deallocate(temp); 
+        throw; 
+    }
+    
+    return temp; 
+}
+
+// destroy_node
+template<typename T, typename Hash, typename KeyEqual>   
+void hashtable<T, Hash, KeyEqual>::    
+destroy_node(node_ptr node)
+{
+    data_allocator::destroy(mystl::address_of(node->value)); 
+    node_allocator::deallocate(node); 
+    node = nullptr; 
+}
+
+
+
+template <typename T, typename Hash, typename KeyEqual>  
+typename hashtable<T, Hash, KeyEqual> :: size_type 
+hashtable<T, Hash, KeyEqual>::next_size(size_type n ) const 
+{
+    return ht_next_prime(n); 
+}
+
+// hashing fuction  
+template<typename T, typename Hash, typename KeyEqual>
+typename hashtable<T, Hash, KeyEqual>::size_type   
+hashtable<T, Hash, KeyEqual>::hash(const key_type& key) const
+{
+    return hash_(key) % bucket_size_;
+}
+
+//rehash if need 
+template<typename T, typename Hash, typename KeyEqual>
+void hashtable<T, Hash, KeyEqual>::    
+rehash_if_need(size_type n)  
+{
+    if(static_cast<float>(size_ + n) > (float)bucket_size_ * max_load_factor())
+        rehash(size_ + n); 
+}
+
+// copy insert 
+template <typename T, typename Hash, typename KeyEqual>   
+template <typename InputIter>   
+void hashtable<T, Hash, KeyEqual>::   
+copy_insert_multi(InputIter first, InputIter last, mystl::input_iterator_tag)
+{
+    size_type n = mystl::distance(first, last); 
+    rehash_if_need(n); 
+    for(; n > 0; --n, ++first)
+    {
+        insert_multi_noresize(*first); 
+    }
+}
+
+template <typename T, typename Hash, typename KeyEqual>  
+template <typename InputIter>  
+void hashtable<T, Hash, KeyEqual>::    
+copy_insert_unique(InputIter first, InputIter last, mystl::input_iterator_tag)
+{
+    rehash_if_need(mystl::distance(first, last)); 
+    for(; first!= last; ++first)
+    {
+        insert_unique_noresize(*first); 
+    }
+}
+
+// insert_node 
+template <typename T, typename Hash, typename KeyEqual>   
+typename hashtable<T, Hash, KeyEqual>::iterator    
+hashtable<T, Hash, KeyEqual>::   
+insert_node_multi(node_ptr np)
+{
+    const auto n = hash(value_traits::get_key(np -> value)); 
+    auto cur = buckets_.at(n); 
+    if(cur == nullptr)
+    {
+        buckets_.at(n) = np; 
+        ++size_; 
+        return iterator(np, this); 
+    }
+
+    for(; cur; cur = cur ->next)
+    {
+        // found 
+        if(is_equal(value_traits::get_key(cur->value), value_traits::get_key(np->value)))
+        {
+            np->next = cur ->next; 
+            cur->next = np; 
+            ++size_; 
+            return iterator(np, this); 
+        }
+    }
+
+    // not found, insert at head 
+    np->next = buckets_.at(n); 
+    buckets_.at(n) = np; 
+    ++size_;
+    return iterator(np, this);
+}
+
+// insert_node_unique() 
+template <typename T, typename Hash, typename KeyEqual>   
+pair<typename hashtable<T, Hash, KeyEqual>:: iterator, bool>  
+hashtable<T, Hash, KeyEqual>::    
+insert_node_unique(node_ptr np)
+{
+    const auto n = hash(value_traits::get_key(np->value)); 
+    auto cur = buckets_[n]; 
+    
+    if(cur == nullptr)
+    {
+        buckets_[n] = np; 
+        ++size_; 
+        return mystl::make_pair(iterator(np, this), true);  
+    }
+
+    for(; cur; cur = cur -> next)
+    {
+        if(is_equal(value_traits::get_key(cur->value), value_traits::get_key(np->value)))
+        {
+            return mystl::make_pair(iterator(cur, this), false); 
+        }
+    }
+
+    // not found 
+    np -> next = buckets_[n]; 
+    buckets_[n] = np; 
+    ++size_; 
+    return mystl::make_pair(iterator(np, this), true); 
+}
+
+// replace_bucket 
+template <typename T, typename Hash, typename KeyEqual>   
+void hashtable<T, Hash, KeyEqual>::   
+replace_bucket(size_type bucket_count)
+{
+    bucket_type bucket(bucket_count);  // ????? 
+    if(size_ != 0)
+    {
+        for(size_type i = 0; i < bucket_size_; ++i)  
+        {
+            for(auto first = buckets_[i]; first; first = first -> next)
+            {
+                auto temp = create_node(first->value); 
+                const auto n = hash(value_traits::get_key(first->value), bucket_count);
+                auto f = bucket[n]; 
+                bool is_inserted = false; 
+                for(auto cur = f; cur; cur = cur->next)
+                {
+                    if(is_equal(value_traits::get_key(cur->value), value_traits::get_key(first->value)))
+                    {
+                        // found 
+                        temp->next = cur->next; 
+                        cur->next = temp;
+                        is_inserted = true;
+                        break; 
+                    }
+                }
+                // not found
+                if(is_inserted)
+                {
+                    temp->next = f;
+                    bucket[n] = temp;
+                }
+            }
+        }
+    }
+
+    buckets_.swap(bucket); 
+    bucket_size_ = buckets_.size(); 
+}
+
+// erase_bucket 
+template <typename T, typename Hash, typename KeyEqual>   
+void hashtable<T, Hash, KeyEqual>::   
+erase_bucket(size_type n, node_ptr first, node_ptr last)
+{
+    auto cur = buckets_[n]; 
+    if(cur == first)  
+    {
+        erase_bucket(n, last); 
+    }
+    else  
+    {
+        node_ptr next = cur -> next; 
+        for(; next != first; cur = next, next = cur->next) {}  
+        while(next != last)
+        {
+            cur->next = next->next;
+            destroy_node(next); 
+            next = cur -> next; 
+            --size_; 
+        }
+    }
+}
+
+// erase bucket n, last   
+template <typename T, typename Hash, typename KeyEqual>   
+void hashtable<T, Hash, KeyEqual>::    
+erase_bucket(size_type n, node_ptr last)
+{
+    auto cur = buckets_[n]; 
+    while(cur != last) 
+    {
+        auto next = cur -> next; 
+        destroy_node(cur); 
+        cur = next; 
+        --size_; 
+    }
+    buckets_[n] = last;
+}
+
+template <typename T, typename Hash, typename KeyEqual>   
+bool hashtable<T, Hash, KeyEqual>::equal_to_multi (const hashtable& other)  
+{
+    if(size_ != other.size_)  return false; 
+
+    for(auto f = begin(), l = end(); f != l;  )
+    {
+        auto p1 = equal_range_multi(value_traits::get_key(*f)); 
+        auto p2 = other.equal_range_multi(value_traits::get_key(*f)); 
+        if(mystl::distance(p1.first, p1.last) != mystl::distance(p2.first, p2.last) ||  
+            ! std::is_permutation(p1.first, p2.last, p2.first, p1.last)) 
+            return false; 
+        f = p1.last; 
+    }
+
+    return true; 
+}
+
+template <typename T, typename Hash, typename KeyEqual>  
+bool hashtable<T, Hash, KeyEqual>::equal_to_unique(const hashtable& other)
+{
+    if(size_ != other.size_) return false; 
+
+    for(auto f = begin(), l = end(); f != l; ++f)
+    {
+        auto res = other.find(value_traits::get_key(*f)); 
+        if(res.node == nullptr || *res != f)
+        {
+            return false; 
+        }
+    }
+
+    return true; 
+}
+
+// generic swap  
+template <typename T, typename Hash, typename KeyEqual>  
+void swap(hashtable<T, Hash, KeyEqual>& lhs, 
+          hashtable<T, Hash, KeyEqual>& rhs) noexcept 
+{
+    lhs.swap(rhs);
+}
 
 }   // end of namespace mystl 
 #endif 
